@@ -40,7 +40,13 @@ export default function RootLayout({
         console.log('ログイン成功:', session?.user?.email);
         // 公開ページにいる場合は、適切なページにリダイレクト
         if (isPublicPath) {
-          router.push('/dashboard'); // または適切なページ
+          // メール確認が完了しているかチェック
+          if (session?.user?.email_confirmed_at) {
+            router.push('/dashboard');
+          } else {
+            // メール確認が完了していない場合は確認待ちページにリダイレクト
+            router.push(`/verify-email?email=${encodeURIComponent(session?.user?.email || '')}`);
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         // ログアウト時

@@ -21,6 +21,13 @@ export default function DashboardPage() {
         return;
       }
 
+      // メール確認が完了しているかチェック
+      if (!session.user.email_confirmed_at) {
+        // メール確認が完了していない場合は確認待ちページにリダイレクト
+        router.push(`/verify-email?email=${encodeURIComponent(session.user.email || '')}`);
+        return;
+      }
+
       setUser(session.user);
       setLoading(false);
     };
@@ -34,7 +41,13 @@ export default function DashboardPage() {
       if (!session) {
         router.push('/login');
       } else {
-        setUser(session.user);
+        // メール確認が完了しているかチェック
+        if (!session.user.email_confirmed_at) {
+          // メール確認が完了していない場合は確認待ちページにリダイレクト
+          router.push(`/verify-email?email=${encodeURIComponent(session.user.email || '')}`);
+        } else {
+          setUser(session.user);
+        }
       }
       setLoading(false);
     });
