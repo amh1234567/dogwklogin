@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 認証不要なパス
-  const publicPaths = ['/login', '/register', '/'];
+  const publicPaths = ['/login', '/register', '/verify-email', '/'];
   const isPublicPath = publicPaths.some((path) => pathname === path);
 
   // 認証ページや公開ページの場合はそのまま通す

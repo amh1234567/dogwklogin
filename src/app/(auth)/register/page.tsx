@@ -65,8 +65,14 @@ export default function RegisterPage() {
       }
 
       if (data.user) {
-        // 登録成功 - ダッシュボードにリダイレクト
-        router.push('/dashboard');
+        // メール確認が必要かチェック
+        if (data.user.email_confirmed_at) {
+          // メール確認が完了している場合はダッシュボードにリダイレクト
+          router.push('/dashboard');
+        } else {
+          // メール確認が必要な場合は確認待ちページにリダイレクト
+          router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+        }
       }
     } catch (err) {
       setError('予期しないエラーが発生しました');

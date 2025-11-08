@@ -32,7 +32,7 @@ export default function RootLayout({
       console.log('認証状態の変更:', event, session?.user?.email);
 
       // 認証不要なパス
-      const publicPaths = ['/login', '/register', '/'];
+      const publicPaths = ['/login', '/register', '/verify-email', '/'];
       const isPublicPath = publicPaths.includes(pathname);
 
       if (event === 'SIGNED_IN') {
