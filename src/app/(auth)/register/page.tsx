@@ -1,6 +1,79 @@
-import Link from "next/link";
+'use client';
+
+import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+
+    // バリデーション
+    if (!name.trim()) {
+      setError('お名前を入力してください');
+      return;
+    }
+
+    if (!email.trim()) {
+      setError('メールアドレスを入力してください');
+      return;
+    }
+
+    if (!password) {
+      setError('パスワードを入力してください');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('パスワードは8文字以上で入力してください');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('パスワードが一致しません');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Supabaseにユーザーを登録
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name.trim(),
+          },
+        },
+      });
+
+      if (signUpError) {
+        setError(signUpError.message || '登録に失敗しました');
+        setLoading(false);
+        return;
+      }
+
+      if (data.user) {
+        // 登録成功 - ダッシュボードにリダイレクト
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      setError('予期しないエラーが発生しました');
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <main className="w-full max-w-md px-6">
@@ -14,7 +87,13 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <form className="space-y-6">
+          {error && (
+            <div className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+              {error}
+            </div>
+          )}
+
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label
                 htmlFor="name"
@@ -26,8 +105,12 @@ export default function RegisterPage() {
                 type="text"
                 id="name"
                 name="name"
-                className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={loading}
+                className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 placeholder="山田 太郎"
+                required
               />
             </div>
 
@@ -42,8 +125,12 @@ export default function RegisterPage() {
                 type="email"
                 id="email"
                 name="email"
-                className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 placeholder="example@email.com"
+                required
               />
             </div>
 
@@ -58,8 +145,13 @@ export default function RegisterPage() {
                 type="password"
                 id="password"
                 name="password"
-                className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 placeholder="8文字以上"
+                required
+                minLength={8}
               />
             </div>
 
@@ -74,20 +166,34 @@ export default function RegisterPage() {
                 type="password"
                 id="confirmPassword"
                 name="confirmPassword"
-                className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={loading}
+                className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 placeholder="パスワードを再入力"
+                required
               />
             </div>
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-lg font-semibold text-white transition-colors hover:bg-indigo-700 active:bg-indigo-800"
+              disabled={loading}
+              className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-lg font-semibold text-white transition-colors hover:bg-indigo-700 active:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              登録する
+              {loading ? '登録中...' : '登録する'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
+            <Link
+              href="/login"
+              className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >
+              すでにアカウントをお持ちの方はログイン
+            </Link>
+          </div>
+
+          <div className="mt-4 text-center">
             <Link
               href="/"
               className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
