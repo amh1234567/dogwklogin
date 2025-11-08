@@ -74,7 +74,11 @@ export default function RootLayout({
   }, [router, pathname]);
 
   return (
-    <html lang="en">
+    <html lang="ja">
+      <head>
+        <title>犬の散歩アプリ</title>
+        <meta name="description" content="愛犬との散歩を楽しむためのアプリ" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
