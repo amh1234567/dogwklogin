@@ -46,11 +46,19 @@ export default function LoginPage() {
         // メール確認が完了しているかチェック
         if (data.user.email_confirmed_at) {
           // メール確認が完了している場合はダッシュボードにリダイレクト
+          // ローディング状態を解除してからリダイレクト
+          setLoading(false);
           router.push('/dashboard');
         } else {
           // メール確認が必要な場合は確認待ちページにリダイレクト
+          // ローディング状態を解除してからリダイレクト
+          setLoading(false);
           router.push(`/verify-email?email=${encodeURIComponent(email)}`);
         }
+      } else {
+        // ユーザーデータが取得できない場合
+        setError('ログインに失敗しました。もう一度お試しください。');
+        setLoading(false);
       }
     } catch (err) {
       setError('予期しないエラーが発生しました');

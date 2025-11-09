@@ -38,8 +38,9 @@ export default function RootLayout({
       if (event === 'SIGNED_IN') {
         // ログイン成功時
         console.log('ログイン成功:', session?.user?.email);
-        // 公開ページにいる場合は、適切なページにリダイレクト
-        if (isPublicPath) {
+        // 公開ページにいる場合のみ、適切なページにリダイレクト
+        // login/page.tsx で既にリダイレクトしている場合は重複を避ける
+        if (isPublicPath && pathname === '/login') {
           // メール確認が完了しているかチェック
           if (session?.user?.email_confirmed_at) {
             router.push('/dashboard');
