@@ -15,10 +15,13 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    console.log('=== handleSubmit 開始 ===');
     e.preventDefault();
+    console.log('preventDefault 実行済み');
     setError(null);
 
     // バリデーション
+    console.log('バリデーション開始:', { name, email, password, confirmPassword });
     if (!name.trim()) {
       setError('お名前を入力してください');
       return;
@@ -40,10 +43,12 @@ export default function RegisterPage() {
     }
 
     if (password !== confirmPassword) {
+      console.log('バリデーションエラー: パスワードが一致しません');
       setError('パスワードが一致しません');
       return;
     }
 
+    console.log('バリデーション成功、新規登録処理を開始');
     setLoading(true);
 
     try {
