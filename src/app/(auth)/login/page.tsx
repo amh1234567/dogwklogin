@@ -31,36 +31,49 @@ export default function LoginPage() {
 
     try {
       // Supabaseにログイン
+      console.log('ログイン試行中...', email);
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
 
+      console.log('ログイン結果:', { data, error: signInError });
+
       if (signInError) {
+        console.error('ログインエラー:', signInError);
         setError(signInError.message || 'ログインに失敗しました');
         setLoading(false);
         return;
       }
 
       if (data.user) {
+        console.log('ログイン成功、ユーザー:', data.user.email, 'メール確認:', data.user.email_confirmed_at);
+        
+        // セッションが確実に保存されるまで少し待つ
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // メール確認が完了しているかチェック
         if (data.user.email_confirmed_at) {
           // メール確認が完了している場合はダッシュボードにリダイレクト
-          // ローディング状態を解除してからリダイレクト
+          console.log('ダッシュボードにリダイレクト');
           setLoading(false);
-          router.push('/dashboard');
+          // window.location.href を使用して確実にリダイレクト
+          window.location.href = '/dashboard';
         } else {
           // メール確認が必要な場合は確認待ちページにリダイレクト
-          // ローディング状態を解除してからリダイレクト
+          console.log('メール確認ページにリダイレクト');
           setLoading(false);
-          router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+          // window.location.href を使用して確実にリダイレクト
+          window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
         }
       } else {
         // ユーザーデータが取得できない場合
+        console.error('ユーザーデータが取得できませんでした');
         setError('ログインに失敗しました。もう一度お試しください。');
         setLoading(false);
       }
     } catch (err) {
+      console.error('予期しないエラー:', err);
       setError('予期しないエラーが発生しました');
       setLoading(false);
     }

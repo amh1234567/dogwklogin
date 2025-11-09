@@ -37,18 +37,11 @@ export default function RootLayout({
 
       if (event === 'SIGNED_IN') {
         // ログイン成功時
-        console.log('ログイン成功:', session?.user?.email);
-        // 公開ページにいる場合のみ、適切なページにリダイレクト
-        // login/page.tsx で既にリダイレクトしている場合は重複を避ける
-        if (isPublicPath && pathname === '/login') {
-          // メール確認が完了しているかチェック
-          if (session?.user?.email_confirmed_at) {
-            router.push('/dashboard');
-          } else {
-            // メール確認が完了していない場合は確認待ちページにリダイレクト
-            router.push(`/verify-email?email=${encodeURIComponent(session?.user?.email || '')}`);
-          }
-        }
+        console.log('layout.tsx: ログイン成功:', session?.user?.email);
+        // login/page.tsx で既にリダイレクト処理を行っているため、
+        // layout.tsx ではリダイレクトしない（重複を避ける）
+        // ただし、他の方法でログインした場合（Magic Linkなど）は処理する
+        // 今回は login/page.tsx で処理するため、ここでは何もしない
       } else if (event === 'SIGNED_OUT') {
         // ログアウト時
         console.log('ログアウトしました');
