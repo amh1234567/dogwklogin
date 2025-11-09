@@ -86,15 +86,25 @@ export default function RegisterPage() {
 
       if (data.user) {
         console.log('新規登録成功、ユーザー:', data.user.email, 'メール確認:', data.user.email_confirmed_at);
+        console.log('セッション確認:', data.session ? 'あり' : 'なし');
+        
         // メール確認が必要かチェック
         if (data.user.email_confirmed_at) {
           // メール確認が完了している場合はダッシュボードにリダイレクト
+          console.log('メール確認済み、ダッシュボードにリダイレクト');
           setLoading(false);
-          window.location.href = '/dashboard';
+          // 少し待ってからリダイレクト（セッションが確実に保存されるまで）
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 100);
         } else {
           // メール確認が必要な場合は確認待ちページにリダイレクト
+          console.log('メール確認が必要、verify-emailページにリダイレクト');
           setLoading(false);
-          window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
+          // 少し待ってからリダイレクト（状態が確実に更新されるまで）
+          setTimeout(() => {
+            window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
+          }, 100);
         }
       } else {
         console.error('ユーザーデータが取得できませんでした');

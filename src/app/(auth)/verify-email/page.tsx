@@ -23,6 +23,11 @@ function VerifyEmailContent() {
     // セッションを確認して、メール確認が完了しているかチェック
     const checkEmailConfirmation = async () => {
       console.log('メール確認状態をチェック中...');
+      console.log('URLパラメータ:', window.location.search);
+      
+      // 少し待ってからセッションを確認（新規登録直後はセッションが作成されていない可能性がある）
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       const { data: { session } } = await supabase.auth.getSession();
       
       console.log('セッション確認結果:', {
@@ -39,7 +44,8 @@ function VerifyEmailContent() {
       }
 
       // セッションがない、またはメール確認が未完了の場合はページを表示
-      console.log('メール確認待ちページを表示');
+      // 新規登録直後はセッションがないことが正常な状態
+      console.log('メール確認待ちページを表示（セッション:', session ? 'あり' : 'なし', '）');
       setLoading(false);
     };
 
