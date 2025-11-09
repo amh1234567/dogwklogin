@@ -83,6 +83,19 @@ export const checkSupabaseConfig = (): boolean => {
 
 // 環境変数が正しく設定されている場合のみtrueを返す
 // 実際にSupabaseを使用する前にこの関数でチェックすること
+// 実行時に環境変数を再取得してチェックする（クライアントサイドで正しく動作するように）
 export const isSupabaseConfigured = (): boolean => {
-  return isValidConfig(supabaseUrl, supabaseAnonKey)
+  // 実行時に環境変数を再取得
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  // デバッグ用ログ（開発環境のみ）
+  if (typeof window !== 'undefined' && (!url || !key)) {
+    console.warn('isSupabaseConfigured: 環境変数が未設定', {
+      url: url || '(未設定)',
+      key: key ? `${key.substring(0, 10)}...` : '(未設定)',
+    });
+  }
+  
+  return isValidConfig(url, key);
 }

@@ -52,21 +52,34 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      // 環境変数の確認（デバッグ用 - 最初に確認）
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      console.log('環境変数チェック（実行時）:', {
+        url: supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : '未設定',
+        key: supabaseKey ? `${supabaseKey.substring(0, 20)}...` : '未設定',
+        urlLength: supabaseUrl?.length || 0,
+        keyLength: supabaseKey?.length || 0,
+      });
+
       // 環境変数の確認
-      if (!isSupabaseConfigured()) {
+      const isConfigured = isSupabaseConfigured();
+      console.log('isSupabaseConfigured() の結果:', isConfigured);
+      
+      if (!isConfigured) {
         console.error('Supabase環境変数が設定されていません');
+        console.error('詳細:', {
+          url: supabaseUrl || '(未設定)',
+          key: supabaseKey ? `${supabaseKey.substring(0, 20)}...` : '(未設定)',
+          urlIsValid: supabaseUrl && supabaseUrl.startsWith('https://'),
+          keyIsValid: supabaseKey && supabaseKey.length > 20,
+        });
         setError('Supabaseの設定が正しくありません。環境変数を確認してください。');
         setLoading(false);
         return;
       }
 
-      // 環境変数の確認（デバッグ用）
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      console.log('Supabase設定確認:', {
-        url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : '未設定',
-        key: supabaseKey ? `${supabaseKey.substring(0, 10)}...` : '未設定',
-      });
+      console.log('Supabase設定確認: OK');
 
       // Supabaseにユーザーを登録
       // redirectTo オプションは使わず、自分でリダイレクト処理を制御する
