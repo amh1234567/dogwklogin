@@ -83,10 +83,6 @@ export const checkSupabaseConfig = (): boolean => {
 
 // 環境変数が正しく設定されている場合のみtrueを返す
 // 実際にSupabaseを使用する前にこの関数でチェックすること
-// 実行時に環境変数を直接参照する（クライアント側でも正しく動作するように）
 export const isSupabaseConfigured = (): boolean => {
-  // 実行時に環境変数を直接参照
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  return isValidConfig(url, key)
+  return isValidConfig(supabaseUrl, supabaseAnonKey)
 }

@@ -64,6 +64,7 @@ export default function RegisterPage() {
       });
 
       // Supabaseにユーザーを登録
+      // redirectTo オプションは使わず、自分でリダイレクト処理を制御する
       console.log('新規登録試行中...', email);
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
@@ -72,10 +73,16 @@ export default function RegisterPage() {
           data: {
             name: name.trim(),
           },
+          // redirectTo は使わない（自分でリダイレクト処理を制御する）
         },
       });
 
-      console.log('新規登録結果:', { data, error: signUpError });
+      console.log('新規登録結果:', { 
+        hasUser: !!data.user,
+        email: data.user?.email,
+        emailConfirmedAt: data.user?.email_confirmed_at,
+        error: signUpError 
+      });
 
       if (signUpError) {
         console.error('新規登録エラー:', signUpError);
@@ -84,22 +91,29 @@ export default function RegisterPage() {
         return;
       }
 
-      if (data.user) {
-        console.log('新規登録成功、ユーザー:', data.user.email, 'メール確認:', data.user.email_confirmed_at);
-        console.log('セッション確認:', data.session ? 'あり' : 'なし');
-        
-        // 常にverify-emailページにリダイレクト
-        console.log('verify-emailページにリダイレクト');
-        setLoading(false);
-        // 少し待ってからリダイレクト（状態が確実に更新されるまで）
-        // セッションが確実に保存されるまで待機
-        await new Promise(resolve => setTimeout(resolve, 300));
-        console.log('verify-emailページにリダイレクト実行');
-        window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
-      } else {
+      // ユーザーデータの確認
+      if (!data.user) {
         console.error('ユーザーデータが取得できませんでした');
         setError('登録に失敗しました。もう一度お試しください。');
         setLoading(false);
+        return;
+      }
+
+      // メール確認状態を確認
+      const emailConfirmedAt = data.user.email_confirmed_at;
+      console.log('メール確認状態:', emailConfirmedAt ? '確認済み' : '未確認');
+
+      setLoading(false);
+
+      // リダイレクト処理を自分で制御
+      if (emailConfirmedAt === null || emailConfirmedAt === undefined) {
+        // メール確認が未完了（null または undefined）の場合は /verify-email に遷移
+        console.log('メール確認未完了、verify-emailページにリダイレクト');
+        window.location.href = `/verify-email?email=${encodeURIComponent(email.trim())}`;
+      } else {
+        // メール確認が完了している場合は /dashboard に遷移
+        console.log('メール確認済み、dashboardページにリダイレクト');
+        window.location.href = '/dashboard';
       }
     } catch (err) {
       console.error('予期しないエラー:', err);
