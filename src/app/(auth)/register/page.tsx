@@ -102,9 +102,10 @@ export default function RegisterPage() {
           console.log('メール確認が必要、verify-emailページにリダイレクト');
           setLoading(false);
           // 少し待ってからリダイレクト（状態が確実に更新されるまで）
-          setTimeout(() => {
-            window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
-          }, 100);
+          // セッションが確実に保存されるまで待機
+          await new Promise(resolve => setTimeout(resolve, 300));
+          console.log('verify-emailページにリダイレクト実行');
+          window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
         }
       } else {
         console.error('ユーザーデータが取得できませんでした');

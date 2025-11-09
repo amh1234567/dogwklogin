@@ -1,16 +1,20 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, FormEvent, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from "next/link";
 import { supabase } from '@/lib/supabase';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  // redirectedFromパラメータを取得
+  const redirectedFrom = searchParams.get('redirectedFrom');
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -48,17 +52,25 @@ export default function LoginPage() {
 
       if (data.user) {
         console.log('ログイン成功、ユーザー:', data.user.email, 'メール確認:', data.user.email_confirmed_at);
+        console.log('リダイレクト元:', redirectedFrom);
         
         // セッションが確実に保存されるまで少し待つ
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
         
         // メール確認が完了しているかチェック
         if (data.user.email_confirmed_at) {
-          // メール確認が完了している場合はダッシュボードにリダイレクト
-          console.log('ダッシュボードにリダイレクト');
+          // メール確認が完了している場合
           setLoading(false);
+          
+          // redirectedFromパラメータがあれば、そのページにリダイレクト
+          // なければダッシュボードにリダイレクト
+          const redirectTo = redirectedFrom && redirectedFrom !== '/login' 
+            ? redirectedFrom 
+            : '/dashboard';
+          
+          console.log('リダイレクト先:', redirectTo);
           // window.location.href を使用して確実にリダイレクト
-          window.location.href = '/dashboard';
+          window.location.href = redirectTo;
         } else {
           // メール確認が必要な場合は確認待ちページにリダイレクト
           console.log('メール確認ページにリダイレクト');
@@ -168,6 +180,24 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+          <div className="text-center">
+            <div className="text-lg text-gray-600 dark:text-gray-300">
+              読み込み中...
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
 
