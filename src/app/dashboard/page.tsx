@@ -1,30 +1,42 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+    let hasRedirected = false;
+
     // セッションを確認
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
+      if (!isMounted) return;
+
       if (!session) {
         // セッションがない場合はログインページにリダイレクト
-        router.push('/login');
+        if (!hasRedirected) {
+          hasRedirected = true;
+          router.push('/login');
+        }
         return;
       }
 
       // メール確認が完了しているかチェック
       if (!session.user.email_confirmed_at) {
         // メール確認が完了していない場合は確認待ちページにリダイレクト
-        router.push(`/verify-email?email=${encodeURIComponent(session.user.email || '')}`);
+        if (!hasRedirected) {
+          hasRedirected = true;
+          router.push(`/verify-email?email=${encodeURIComponent(session.user.email || '')}`);
+        }
         return;
       }
 
@@ -37,25 +49,44 @@ export default function DashboardPage() {
     // 認証状態の変更を監視
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return;
+
+      // 初期セッション確認時はスキップ（checkSession で処理済み）
+      if (event === 'INITIAL_SESSION') {
+        return;
+      }
+
       if (!session) {
-        router.push('/login');
-      } else {
-        // メール確認が完了しているかチェック
-        if (!session.user.email_confirmed_at) {
-          // メール確認が完了していない場合は確認待ちページにリダイレクト
-          router.push(`/verify-email?email=${encodeURIComponent(session.user.email || '')}`);
-        } else {
-          setUser(session.user);
+        // ログアウト時のみリダイレクト（無限ループを防ぐ）
+        if (event === 'SIGNED_OUT' && !hasRedirected) {
+          hasRedirected = true;
+          router.push('/login');
         }
+        setLoading(false);
+        return;
+      }
+
+      // メール確認が完了しているかチェック
+      if (!session.user.email_confirmed_at) {
+        // メール確認が完了していない場合は確認待ちページにリダイレクト
+        // ただし、既に verify-email ページにいる場合はリダイレクトしない
+        if (!hasRedirected && pathname !== '/verify-email') {
+          hasRedirected = true;
+          router.push(`/verify-email?email=${encodeURIComponent(session.user.email || '')}`);
+        }
+      } else {
+        // メール確認が完了している場合はユーザー情報を設定
+        setUser(session.user);
       }
       setLoading(false);
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, pathname]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -64,7 +95,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center">
           <div className="text-lg text-gray-600 dark:text-gray-300">
             読み込み中...
@@ -79,7 +110,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* ヘッダー */}
         <header className="mb-8">

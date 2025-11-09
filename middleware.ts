@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 認証不要なパス
@@ -13,10 +14,46 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // ここで認証チェックを実装
-  // 現在は基本的な構造のみ
-  // 将来的に Supabase のセッション確認を追加可能
+  // Supabase のセッションを確認
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  // 環境変数が設定されていない場合は、そのまま通す（開発環境でのエラー回避）
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return NextResponse.next();
+  }
+
+  // Supabase クライアントを作成（middleware 用）
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+
+  // クッキーからセッション情報を取得
+  // Supabase は sb-<project-ref>-auth-token という形式のクッキーを使用
+  // プロジェクト参照を URL から取得
+  const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+  const authTokenCookieName = projectRef ? `sb-${projectRef}-auth-token` : null;
+  
+  // セッションクッキーを確認
+  const hasSession = authTokenCookieName 
+    ? request.cookies.has(authTokenCookieName)
+    : // フォールバック: sb- で始まるクッキーを確認
+      Array.from(request.cookies.getAll()).some(cookie => cookie.name.startsWith('sb-') && cookie.name.includes('auth-token'));
+
+  // セッションがない場合はログインページにリダイレクト
+  if (!hasSession) {
+    // ログインページへのリダイレクト
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirectedFrom', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // セッションがある場合は、そのまま通す
+  // 詳細な認証チェック（メール確認など）は各ページで行う
   return NextResponse.next();
 }
 

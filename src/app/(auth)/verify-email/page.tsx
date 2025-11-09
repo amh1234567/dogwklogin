@@ -54,6 +54,8 @@ function VerifyEmailContent() {
 
     setResending(true);
     try {
+      // Supabase の確認メール再送信 API
+      // resendConfirmationEmail メソッドを使用
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email,
@@ -61,7 +63,9 @@ function VerifyEmailContent() {
 
       if (error) {
         console.error('メール再送信エラー:', error);
-        alert('メールの再送信に失敗しました。もう一度お試しください。');
+        // エラーメッセージをより詳細に表示
+        const errorMessage = error.message || 'メールの再送信に失敗しました。もう一度お試しください。';
+        alert(errorMessage);
       } else {
         alert('確認メールを再送信しました。メールボックスをご確認ください。');
       }
@@ -75,7 +79,7 @@ function VerifyEmailContent() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center">
           <div className="text-lg text-gray-600 dark:text-gray-300">
             読み込み中...
@@ -173,7 +177,7 @@ export default function VerifyEmailPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
           <div className="text-center">
             <div className="text-lg text-gray-600 dark:text-gray-300">
               読み込み中...

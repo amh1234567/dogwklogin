@@ -44,7 +44,7 @@ export default function LogoutPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <main className="w-full max-w-md px-6">
         <div className="rounded-lg bg-white p-8 shadow-lg dark:bg-gray-800">
           <div className="space-y-4 text-center">
