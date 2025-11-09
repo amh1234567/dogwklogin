@@ -17,18 +17,29 @@ function VerifyEmailContent() {
     const emailParam = searchParams.get('email');
     if (emailParam) {
       setEmail(emailParam);
+      console.log('メールアドレスを取得:', emailParam);
     }
 
     // セッションを確認して、メール確認が完了しているかチェック
     const checkEmailConfirmation = async () => {
+      console.log('メール確認状態をチェック中...');
       const { data: { session } } = await supabase.auth.getSession();
+      
+      console.log('セッション確認結果:', {
+        hasSession: !!session,
+        emailConfirmed: !!session?.user?.email_confirmed_at,
+        email: session?.user?.email,
+      });
       
       if (session?.user?.email_confirmed_at) {
         // メール確認が完了している場合はダッシュボードにリダイレクト
-        router.push('/dashboard');
+        console.log('メール確認済み、ダッシュボードにリダイレクト');
+        window.location.href = '/dashboard';
         return;
       }
 
+      // セッションがない、またはメール確認が未完了の場合はページを表示
+      console.log('メール確認待ちページを表示');
       setLoading(false);
     };
 
@@ -38,9 +49,12 @@ function VerifyEmailContent() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('認証状態変更:', event, session?.user?.email);
+      
       if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
         // メール確認が完了した場合はダッシュボードにリダイレクト
-        router.push('/dashboard');
+        console.log('メール確認完了、ダッシュボードにリダイレクト');
+        window.location.href = '/dashboard';
       }
     });
 
@@ -90,7 +104,7 @@ function VerifyEmailContent() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <main className="w-full max-w-md px-6">
         <div className="rounded-lg bg-white p-8 shadow-lg dark:bg-gray-800">
           <div className="mb-8 space-y-2 text-center">
