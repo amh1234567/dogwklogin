@@ -3,7 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -47,9 +47,26 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      // 環境変数の確認
+      if (!isSupabaseConfigured()) {
+        console.error('Supabase環境変数が設定されていません');
+        setError('Supabaseの設定が正しくありません。環境変数を確認してください。');
+        setLoading(false);
+        return;
+      }
+
+      // 環境変数の確認（デバッグ用）
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      console.log('Supabase設定確認:', {
+        url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : '未設定',
+        key: supabaseKey ? `${supabaseKey.substring(0, 10)}...` : '未設定',
+      });
+
       // Supabaseにユーザーを登録
+      console.log('新規登録試行中...', email);
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
           data: {
@@ -58,24 +75,37 @@ export default function RegisterPage() {
         },
       });
 
+      console.log('新規登録結果:', { data, error: signUpError });
+
       if (signUpError) {
+        console.error('新規登録エラー:', signUpError);
         setError(signUpError.message || '登録に失敗しました');
         setLoading(false);
         return;
       }
 
       if (data.user) {
+        console.log('新規登録成功、ユーザー:', data.user.email, 'メール確認:', data.user.email_confirmed_at);
         // メール確認が必要かチェック
         if (data.user.email_confirmed_at) {
           // メール確認が完了している場合はダッシュボードにリダイレクト
-          router.push('/dashboard');
+          setLoading(false);
+          window.location.href = '/dashboard';
         } else {
           // メール確認が必要な場合は確認待ちページにリダイレクト
-          router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+          setLoading(false);
+          window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
         }
+      } else {
+        console.error('ユーザーデータが取得できませんでした');
+        setError('登録に失敗しました。もう一度お試しください。');
+        setLoading(false);
       }
     } catch (err) {
-      setError('予期しないエラーが発生しました');
+      console.error('予期しないエラー:', err);
+      // エラーの詳細を表示
+      const errorMessage = err instanceof Error ? err.message : '予期しないエラーが発生しました';
+      setError(`エラー: ${errorMessage}`);
       setLoading(false);
     }
   };
