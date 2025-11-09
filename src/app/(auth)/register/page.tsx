@@ -88,25 +88,14 @@ export default function RegisterPage() {
         console.log('新規登録成功、ユーザー:', data.user.email, 'メール確認:', data.user.email_confirmed_at);
         console.log('セッション確認:', data.session ? 'あり' : 'なし');
         
-        // メール確認が必要かチェック
-        if (data.user.email_confirmed_at) {
-          // メール確認が完了している場合はダッシュボードにリダイレクト
-          console.log('メール確認済み、ダッシュボードにリダイレクト');
-          setLoading(false);
-          // 少し待ってからリダイレクト（セッションが確実に保存されるまで）
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 100);
-        } else {
-          // メール確認が必要な場合は確認待ちページにリダイレクト
-          console.log('メール確認が必要、verify-emailページにリダイレクト');
-          setLoading(false);
-          // 少し待ってからリダイレクト（状態が確実に更新されるまで）
-          // セッションが確実に保存されるまで待機
-          await new Promise(resolve => setTimeout(resolve, 300));
-          console.log('verify-emailページにリダイレクト実行');
-          window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
-        }
+        // 常にverify-emailページにリダイレクト
+        console.log('verify-emailページにリダイレクト');
+        setLoading(false);
+        // 少し待ってからリダイレクト（状態が確実に更新されるまで）
+        // セッションが確実に保存されるまで待機
+        await new Promise(resolve => setTimeout(resolve, 300));
+        console.log('verify-emailページにリダイレクト実行');
+        window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
       } else {
         console.error('ユーザーデータが取得できませんでした');
         setError('登録に失敗しました。もう一度お試しください。');
