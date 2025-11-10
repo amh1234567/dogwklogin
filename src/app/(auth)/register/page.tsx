@@ -121,17 +121,21 @@ export default function RegisterPage() {
       const emailConfirmedAt = data.user.email_confirmed_at;
       console.log('メール確認状態:', emailConfirmedAt ? '確認済み' : '未確認');
 
+      // セッションが確実に保存されるまで少し待つ
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       setLoading(false);
 
       // リダイレクト処理を自分で制御
       if (emailConfirmedAt === null || emailConfirmedAt === undefined) {
         // メール確認が未完了（null または undefined）の場合は /verify-email に遷移
         console.log('メール確認未完了、verify-emailページにリダイレクト');
-        window.location.href = `/verify-email?email=${encodeURIComponent(email.trim())}`;
+        // router.push を使用してリダイレクト
+        router.push(`/verify-email?email=${encodeURIComponent(email.trim())}`);
       } else {
         // メール確認が完了している場合は /dashboard に遷移
         console.log('メール確認済み、dashboardページにリダイレクト');
-        window.location.href = '/dashboard';
+        router.push('/dashboard');
       }
     } catch (err) {
       console.error('予期しないエラー:', err);
